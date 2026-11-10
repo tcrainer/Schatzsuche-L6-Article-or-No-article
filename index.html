@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schatzsuche: Sitzenbleiben & Inklusion (Artikel)</title>
-    <!-- External Dependencies: Tailwind CSS and Google Fonts -->
+    <title>Schatzsuche: Sitzenbleiben & Inklusion (Artikel-Lückentext)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap');
         
         body {
             font-family: 'Quicksand', sans-serif;
@@ -43,15 +42,32 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
-        .mic-listening {
-            animation: pulse-ring 1.2s infinite;
-            background-color: #dc2626 !important;
-            transform: scale(1.1);
+        .gap-slot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 72px;
+            height: 32px;
+            padding: 0 8px;
+            margin: 2px 4px;
+            border-bottom: 3px solid #16a34a;
+            background-color: #f8fafc;
+            border-radius: 6px;
+            font-weight: 800;
+            color: #15803d;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            vertical-align: middle;
         }
-        @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.8); }
-            70% { box-shadow: 0 0 0 16px rgba(220, 38, 38, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        .gap-slot.active-gap {
+            background-color: #dcfce7;
+            border-color: #15803d;
+            box-shadow: 0 0 0 2px #86efac;
+        }
+        .gap-slot:hover {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #b91c1c;
         }
     </style>
 </head>
@@ -59,10 +75,10 @@
 
     <div id="app" class="max-w-7xl w-full mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-green-200">
         <!-- Header Section -->
-        <header class="bg-green-600 px-4 py-3 text-white flex flex-row justify-between items-center gap-2">
+        <header class="bg-green-600 px-4 py-2.5 text-white flex flex-row justify-between items-center gap-2">
             <div>
-                <h1 class="text-xl md:text-2xl title-font leading-tight">💎 Schatzsuche: Sitzenbleiben & Inklusion</h1>
-                <p class="text-green-100 text-xs italic">Bestimmter, unbestimmter oder kein Artikel / Definite, indefinite or no article</p>
+                <h1 class="text-xl md:text-2xl title-font leading-tight">💎 Schatzsuche: Artikel oder kein Artikel?</h1>
+                <p class="text-green-100 text-xs italic">Sitzenbleiben & Inklusion — Wähle den richtigen Artikel oder „–“ (kein Artikel)!</p>
             </div>
             <div id="timer-display" class="bg-green-800 px-3 py-1 rounded-xl text-lg md:text-xl font-bold border border-green-400 text-center shadow-inner">
                 08:00
@@ -81,56 +97,57 @@
         <!-- Main Game Interface (Compact Single Page) -->
         <div id="game-screen" class="hidden flex flex-col lg:flex-row h-full">
             
-            <!-- Left Panel: Control & Tasks (Compact) -->
+            <!-- Left Panel: Control & Gap-Fill Tasks -->
             <div class="w-full lg:w-5/12 p-3 md:p-4 bg-slate-50 border-r border-slate-200 flex flex-col justify-between gap-2.5">
                 
                 <!-- Player Board -->
                 <div id="player-board" class="grid grid-cols-2 lg:grid-cols-1 gap-2"></div>
 
-                <!-- Task Box + Verb Help -->
-                <div id="turn-info" class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-center space-y-2">
-                    <div>
-                        <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Satz-Aufgabe / Target Sentence</p>
-                        <p id="target-prompt" class="text-sm md:text-base font-black text-slate-800 mt-0.5 leading-snug"></p>
+                <!-- Task Box: English + German Gap-fill + Hint -->
+                <div id="turn-info" class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                    <div class="text-center">
+                        <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Englisch / English Prompt</p>
+                        <p id="target-prompt" class="text-xs md:text-sm font-bold text-slate-600 italic mt-0.5"></p>
                     </div>
+
+                    <div class="pt-2 border-t border-slate-100 text-center">
+                        <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-1">Lückentext / Fill in the gap(s)</p>
+                        <div id="german-gap-sentence" class="text-sm md:text-base font-bold text-black leading-relaxed"></div>
+                    </div>
+
+                    <!-- Grammar / Gender Hint Button -->
                     <div class="pt-1 border-t border-slate-100 flex items-center justify-center">
-                        <button id="hint-btn" onclick="showVerbHint()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-bold px-3 py-1 rounded-lg border border-amber-300 transition-colors">
-                            💡 Hilfe: Verb zeigen (nur 1 Feld) / Show Verb (1 tile)
+                        <button id="hint-btn" onclick="showGrammarHint()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-3 py-1 rounded-lg border border-amber-300 transition-colors">
+                            💡 Hilfe: Regel & Genus zeigen (nur 1 Feld) / Show Hint (1 tile)
                         </button>
-                        <div id="verb-hint-display" class="hidden text-xs font-bold text-amber-800 bg-amber-50 px-3 py-1 rounded-lg border border-amber-200">
-                            💡 Verb-Hilfe: <span id="verb-text" class="underline font-black"></span>
+                        <div id="grammar-hint-display" class="hidden text-[11px] font-bold text-amber-900 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 text-center">
+                            💡 <span id="hint-text"></span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Input & Speech Section -->
-                <div id="input-section" class="space-y-2">
-                    <div class="flex gap-2">
-                        <textarea id="answer-input" placeholder="Tippe hier oder nutze Mikrofon / Type here or use mic..."
-                               class="w-full p-2 border border-slate-200 rounded-xl focus:border-green-500 outline-none transition-all text-sm md:text-base bg-white h-16 resize-none font-bold text-black"
-                        ></textarea>
+                <!-- Article Option Bank -->
+                <div id="options-section" class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] uppercase font-bold text-slate-400">Wähle für die Lücke / Click to fill:</span>
+                        <button onclick="clearGaps()" class="text-[11px] text-red-500 hover:underline font-bold">↺ Zurücksetzen / Clear</button>
                     </div>
-                    
-                    <div class="flex gap-2">
-                        <button id="submit-btn" onclick="checkAnswer()"
-                                class="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-2.5 rounded-xl shadow transition-all text-sm md:text-base">
-                            PRÜFEN / CHECK
-                        </button>
-                        <button id="mic-btn" onclick="startSpeech()" 
-                                class="w-14 bg-red-500 hover:bg-red-600 text-white rounded-xl shadow flex items-center justify-center text-2xl transition-all" title="Spracheingabe">
-                            🎤
-                        </button>
+                    <div id="article-buttons" class="flex flex-wrap gap-1.5 justify-center">
+                        <!-- Dynamically populated buttons -->
                     </div>
-                    <p id="speech-status" class="text-[11px] text-center text-slate-500 h-3 font-bold italic">Tippen oder sprechen / Type or speak</p>
+                    <button id="submit-btn" onclick="checkAnswer()"
+                            class="w-full bg-green-500 hover:bg-green-600 text-white font-black py-2 rounded-xl shadow transition-all text-sm md:text-base disabled:opacity-40">
+                        PRÜFEN / CHECK
+                    </button>
                 </div>
                 
                 <!-- Feedback Area (Fixed Compact Height) -->
-                <div id="feedback-area" class="p-2 md:p-3 rounded-xl flex flex-col items-center justify-center text-center bg-white border border-slate-200 shadow-inner min-h-[95px] text-xs md:text-sm">
-                    <p class="text-slate-400 italic">Bereit für die nächste Runde / Ready for next round</p>
+                <div id="feedback-area" class="p-2 md:p-2.5 rounded-xl flex flex-col items-center justify-center text-center bg-white border border-slate-200 shadow-inner min-h-[85px] text-xs">
+                    <p class="text-slate-400 italic">Fülle alle Lücken aus und klicke auf PRÜFEN / Fill all gaps & click CHECK</p>
                 </div>
 
                 <button id="continue-btn" onclick="nextTurn()" 
-                        class="hidden w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl shadow transition-all animate-pulse text-base">
+                        class="hidden w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl shadow transition-all animate-pulse text-sm md:text-base">
                     Nächster Spieler / Next Player ➔
                 </button>
             </div>
@@ -139,11 +156,11 @@
             <div class="w-full lg:w-7/12 p-3 md:p-4 bg-white flex flex-col justify-between">
                 <div class="mb-2 flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
                     <h3 id="grid-status-text" class="text-xs md:text-sm font-bold text-slate-700 flex items-center gap-1">
-                        <span>📍</span> Bereit zum Graben / Ready to dig...
+                        <span>📍</span> Löse zuerst die Aufgabe / Solve task first...
                     </h3>
                     <span id="dig-count" class="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold shadow-sm"></span>
                 </div>
-                <div id="treasure-grid" class="grid grid-cols-6 sm:grid-cols-8 gap-1.5 p-2 bg-slate-50 rounded-xl border border-slate-100 max-h-[420px] overflow-y-auto">
+                <div id="treasure-grid" class="grid grid-cols-6 sm:grid-cols-8 gap-1.5 p-2 bg-slate-50 rounded-xl border border-slate-100 max-h-[430px] overflow-y-auto">
                 </div>
             </div>
         </div>
@@ -157,56 +174,61 @@
     </div>
 
     <script>
+        /**
+         * 38 Gap-Fill Sentences testing Definite Article, Indefinite Article (ein/eine/kein/keine), and Zero Article (–).
+         * Each ___ in `deGaps` corresponds to an entry in `answers`.
+         */
         const sentencePairs = [
-            // Category 1: Definite article where English has NO article (Abstract nouns, meist-, countries, streets, dates, prices/frequency)
-            { de: "Der Leistungsdruck schadet der Motivation.", en: "Pressure to achieve harms motivation.", verb: "schaden (+ Dativ)" },
-            { de: "Die individuelle Förderung kann das Selbstbewusstsein stärken.", en: "Individual support can boost self-confidence.", verb: "können ... stärken" },
-            { de: "Die Inklusion und die Barrierefreiheit gehören zusammen.", en: "Inclusion and accessibility belong together.", verb: "zusammengehören" },
-            { de: "Jedes Kind hat das Recht auf Bildung.", en: "Every child has the right to education.", verb: "haben" },
-            { de: "In der Schweiz lernen viele Kinder mit Förderbedarf an der Regelschule.", en: "In Switzerland many children with special educational needs learn at mainstream school.", verb: "lernen" },
-            { de: "In der Türkei gibt es auch eine Debatte über die Inklusion.", en: "In Turkey there is also a debate about inclusion.", verb: "es gibt" },
-            { de: "Im heutigen Bayern gilt eine strenge Praxis bei der Versetzung.", en: "In modern-day Bavaria a strict practice applies to moving up a year.", verb: "gelten" },
-            { de: "Die meisten Schüler wollen nicht sitzen bleiben.", en: "Most pupils do not want to repeat a year.", verb: "wollen ... sitzen bleiben" },
-            { de: "Die meisten Bundesländer haben keine einheitlichen Regeln für die Versetzung.", en: "Most federal states have no uniform rules for moving up a year.", verb: "haben" },
-            { de: "Im Sommer müssen manche Schüler ihre Wissenslücken stopfen.", en: "In summer some pupils have to fill their gaps in knowledge.", verb: "müssen ... stopfen" },
-            { de: "Der Förderunterricht findet dreimal die Woche am Nachmittag statt.", en: "Remedial teaching takes place three times a week in the afternoon.", verb: "stattfinden" },
-            { de: "Der Kurs für die Gebärdensprache kostet zwanzig Euro die Stunde.", en: "The course for sign language costs twenty euros an hour.", verb: "kosten" },
-            { de: "Die Förderschule und die Regelschule liegen in der Gartenstraße.", en: "The special school and the mainstream school are on Garden Street.", verb: "liegen" },
+            // Category 1: Definite article where English has NO article
+            { deGaps: "___ Leistungsdruck schadet ___ Motivation.", answers: ["Der", "der"], en: "Pressure to achieve harms motivation.", hint: "Abstrakte Nomen brauchen den Artikel: Leistungsdruck (m, Nom) | Motivation (f, Dat nach 'schaden')" },
+            { deGaps: "___ individuelle Förderung kann ___ Selbstbewusstsein stärken.", answers: ["Die", "das"], en: "Individual support can boost self-confidence.", hint: "Abstrakte Nomen: Förderung (f, Nom) | Selbstbewusstsein (n, Akk)" },
+            { deGaps: "___ Inklusion und ___ Barrierefreiheit gehören zusammen.", answers: ["Die", "die"], en: "Inclusion and accessibility belong together.", hint: "Abstrakte Nomen: Inklusion (f, Nom) | Barrierefreiheit (f, Nom)" },
+            { deGaps: "Jedes Kind hat ___ Recht auf ___ Bildung.", answers: ["das", "–"], en: "Every child has the right to education.", hint: "Recht (n, Akk - 'das Recht auf') | Bildung allgemein nach 'Recht auf' ohne Artikel (–)" },
+            { deGaps: "In ___ Schweiz lernen viele Kinder mit ___ Förderbedarf an ___ Regelschule.", answers: ["der", "–", "der"], en: "In Switzerland many children with special educational needs learn at mainstream school.", hint: "Schweiz (f, Dat) | nach 'mit' + unzählbar kein Artikel (–) | Regelschule (f, Dat)" },
+            { deGaps: "In ___ Türkei gibt es auch ___ Debatte über ___ Inklusion.", answers: ["der", "eine", "die"], en: "In Turkey there is also a debate about inclusion.", hint: "Türkei (f, Dat) | Debatte (f, Akk - unbestimmt) | Inklusion (f, Akk - abstraktes Nomen)" },
+            { deGaps: "Im heutigen ___ Bayern gilt ___ strenge Praxis bei ___ Versetzung.", answers: ["–", "eine", "der"], en: "In modern-day Bavaria a strict practice applies to moving up a year.", hint: "Artikel steckt schon in 'Im' (–) | Praxis (f, Nom) | Versetzung (f, Dat)" },
+            { deGaps: "___ meisten Schüler wollen nicht sitzen bleiben.", answers: ["Die"], en: "Most pupils do not want to repeat a year.", hint: "Vor 'meisten' steht im Deutschen immer der bestimmte Artikel Plural" },
+            { deGaps: "___ meisten Bundesländer haben ___ einheitlichen Regeln für ___ Versetzung.", answers: ["Die", "keine", "die"], en: "Most federal states have no uniform rules for moving up a year.", hint: "meisten (Pl) | Verneinung Plural (keine) | Versetzung (f, Akk)" },
+            { deGaps: "Im Sommer müssen manche Schüler ___ Wissenslücken stopfen.", answers: ["die"], en: "In summer some pupils have to fill the gaps in knowledge.", hint: "Wissenslücken (Pl, Akk - 'die Wissenslücken stopfen')" },
+            { deGaps: "___ Förderunterricht findet dreimal ___ Woche statt.", answers: ["Der", "die"], en: "Remedial teaching takes place three times a week.", hint: "Förderunterricht (m, Nom) | Frequenz: 'dreimal die Woche'" },
+            { deGaps: "Der Kurs für ___ Gebärdensprache kostet zwanzig Euro ___ Stunde.", answers: ["die", "die"], en: "The course for sign language costs twenty euros an hour.", hint: "Gebärdensprache (f, Akk) | Preis/Maß: 'zwanzig Euro die Stunde'" },
+            { deGaps: "___ Förderschule liegt in ___ Gartenstraße.", answers: ["Die", "der"], en: "The special school is on Garden Street.", hint: "Förderschule (f, Nom) | Straßennamen immer mit Artikel: Gartenstraße (f, Dat)" },
 
             // Category 2: Definite article for Body Parts & Clothing (where English uses my / his / her)
-            { de: "Beim Lernen der Gebärdensprache bewegt das Mädchen die Hände.", en: "While learning sign language the girl moves her hands.", verb: "bewegen" },
-            { de: "Beim Lesen der Blindenschrift schließt der Schüler die Augen.", en: "While reading braille the pupil closes his eyes.", verb: "schließen" },
-            { de: "Wegen des Leistungsdrucks tut mir der Bauch weh.", en: "Because of the pressure to achieve my stomach hurts.", verb: "wehtun" },
-            { de: "Vor dem Förderunterricht zieht die Schülerin den Mantel aus.", en: "Before remedial teaching the female pupil takes off her coat.", verb: "ausziehen" },
-            { de: "Nach der Ehrenrunde schüttelt der Junge den Kopf.", en: "After repeating a year the boy shakes his head.", verb: "schütteln" },
-            { de: "Der Sonderpädagoge schüttelt mir die Hand.", en: "The special needs teacher shakes my hand.", verb: "schütteln" },
+            { deGaps: "Beim Lernen ___ Gebärdensprache bewegt das Mädchen ___ Hände.", answers: ["der", "die"], en: "While learning sign language the girl moves her hands.", hint: "Gebärdensprache (f, Gen) | Körperteile mit bestimmtem Artikel: Hände (Pl, Akk)" },
+            { deGaps: "Beim Lesen ___ Blindenschrift schließt der Schüler ___ Augen.", answers: ["der", "die"], en: "While reading braille the pupil closes his eyes.", hint: "Blindenschrift (f, Gen) | Körperteile mit bestimmtem Artikel: Augen (Pl, Akk)" },
+            { deGaps: "Wegen des Leistungsdrucks tut mir ___ Bauch weh.", answers: ["der"], en: "Because of the pressure to achieve my stomach hurts.", hint: "Körperteil mit bestimmtem Artikel: Bauch (m, Nom)" },
+            { deGaps: "Vor dem Förderunterricht zieht die Schülerin ___ Mantel aus.", answers: ["den"], en: "Before remedial teaching the female pupil takes off her coat.", hint: "Kleidung mit bestimmtem Artikel: Mantel (m, Akk)" },
+            { deGaps: "Nach ___ Ehrenrunde schüttelt der Junge ___ Kopf.", answers: ["der", "den"], en: "After repeating a year the boy shakes his head.", hint: "Ehrenrunde (f, Dat) | Körperteil: Kopf (m, Akk)" },
+            { deGaps: "___ Sonderpädagoge schüttelt mir ___ Hand.", answers: ["Der", "die"], en: "The special needs teacher shakes my hand.", hint: "Sonderpädagoge (m, Nom) | Körperteil: Hand (f, Akk)" },
 
             // Category 3: Indefinite article (ein/eine) vs. NO article with professions, nationalities, and als
-            { de: "Mein Bruder wird Sonderpädagoge an einer Förderschule.", en: "My brother is becoming a special needs teacher at a special school.", verb: "werden" },
-            { de: "Sie ist eine engagierte Sonderpädagogin und unterstützt die Inklusion.", en: "She is a dedicated special needs teacher and supports inclusion.", verb: "sein / unterstützen" },
-            { de: "Er arbeitet als Sonderpädagoge in Hamburg.", en: "He works as a special needs teacher in Hamburg.", verb: "arbeiten" },
-            { de: "Der neue Sonderpädagoge ist Österreicher.", en: "The new special needs teacher is an Austrian.", verb: "sein" },
-            { de: "Die Ehrenrunde ist manchmal eine zweite Chance für ein Kind.", en: "Repeating a year is sometimes a second chance for a child.", verb: "sein" },
-            { de: "Ist der Förderunterricht eine bessere Alternative als das Sitzenbleiben?", en: "Is remedial teaching a better alternative than repeating a year?", verb: "sein" },
-            { de: "In Bayern gibt es eine strenge Praxis, wenn Schüler nicht versetzt werden.", en: "In Bavaria there is a strict practice when pupils are not moved up.", verb: "es gibt / versetzt werden" },
-            { de: "Je nach Bundesland ist eine Ehrenrunde möglich oder nicht.", en: "Depending on the federal state repeating a year is possible or not.", verb: "sein" },
+            { deGaps: "Mein Bruder wird ___ Sonderpädagoge an ___ Förderschule.", answers: ["–", "einer"], en: "My brother is becoming a special needs teacher at a special school.", hint: "Beruf nach 'werden' ohne Artikel (–) | Förderschule (f, Dat - unbestimmt)" },
+            { deGaps: "Sie ist ___ engagierte Sonderpädagogin und unterstützt ___ Inklusion.", answers: ["eine", "die"], en: "She is a dedicated special needs teacher and supports inclusion.", hint: "Beruf MIT Adjektiv braucht 'eine' (f, Nom) | Inklusion (f, Akk - abstrakt)" },
+            { deGaps: "Er arbeitet als ___ Sonderpädagoge in ___ Hamburg.", answers: ["–", "–"], en: "He works as a special needs teacher in Hamburg.", hint: "Nach 'als' + Beruf kein Artikel (–) | Stadt ohne Adjektiv kein Artikel (–)" },
+            { deGaps: "___ neue Sonderpädagoge ist ___ Österreicher.", answers: ["Der", "–"], en: "The new special needs teacher is an Austrian.", hint: "Bestimmte Person (m, Nom) | Nationalität nach 'sein' ohne Artikel (–)" },
+            { deGaps: "___ Ehrenrunde ist manchmal ___ zweite Chance für ___ Kind.", answers: ["Die", "eine", "ein"], en: "Repeating a year is sometimes a second chance for a child.", hint: "Ehrenrunde (f, Nom) | Chance (f, Nom - unbestimmt) | Kind (n, Akk - unbestimmt)" },
+            { deGaps: "Ist ___ Förderunterricht ___ bessere Alternative als ___ Sitzenbleiben?", answers: ["der", "eine", "das"], en: "Is remedial teaching a better alternative than repeating a year?", hint: "Förderunterricht (m, Nom) | Alternative (f, Nom) | Sitzenbleiben (n, Nom)" },
+            { deGaps: "In ___ Bayern gibt es ___ strenge Praxis, wenn ___ Schüler nicht versetzt werden.", answers: ["–", "eine", "–"], en: "In Bavaria there is a strict practice when pupils are not moved up.", hint: "Bundesland ohne Artikel (–) | Praxis (f, Akk) | unbestimmter Plural ohne Artikel (–)" },
+            { deGaps: "Je nach ___ Bundesland ist ___ Ehrenrunde möglich.", answers: ["–", "eine"], en: "Depending on the federal state repeating a year (an extra lap) is possible.", hint: "Fester Ausdruck 'je nach Bundesland' ohne Artikel (–) | Ehrenrunde (f, Nom)" },
 
             // Category 4: NO article for musical instruments, some/any, and negation with kein/keine
-            { de: "In der Regelschule lernen die Kinder gemeinsam und spielen Klavier.", en: "In the mainstream school the children learn together and play the piano.", verb: "lernen / spielen" },
-            { de: "Trotz seines Förderbedarfs spielt der Schüler Gitarre.", en: "Despite his special educational needs the pupil plays the guitar.", verb: "spielen" },
-            { de: "Um Wissenslücken zu stopfen, brauchen die Schulen Sonderpädagogen.", en: "In order to fill gaps in knowledge the schools need some special needs teachers.", verb: "stopfen / brauchen" },
-            { de: "Gibt es an dieser Regelschule individuellen Förderunterricht?", en: "Is there any individual remedial teaching at this mainstream school?", verb: "gibt es" },
-            { de: "Ohne Barrierefreiheit hat das Kind keine zweite Chance.", en: "Without accessibility the child has no second chance.", verb: "haben" },
-            { de: "Wir haben Texte in Blindenschrift, aber keine Bücher für Gebärdensprache.", en: "We have some texts in braille, but no books for sign language.", verb: "haben" },
-            { de: "Es gibt Förderunterricht in Hamburg, aber keine einheitlichen Regeln in Deutschland.", en: "There is some remedial teaching in Hamburg, but no uniform rules in Germany.", verb: "es gibt" },
-            { de: "Mit etwas individueller Förderung wird der Schüler versetzt.", en: "With a little individual support the pupil will be moved up.", verb: "versetzt werden" },
-            { de: "Ein paar Schüler drehen eine Ehrenrunde, um ihre Wissenslücken zu stopfen.", en: "A few pupils repeat a year in order to fill their gaps in knowledge.", verb: "drehen / stopfen" },
+            { deGaps: "In ___ Regelschule lernen ___ Kinder gemeinsam und spielen ___ Klavier.", answers: ["der", "die", "–"], en: "In the mainstream school the children learn together and play the piano.", hint: "Regelschule (f, Dat) | Kinder (Pl, Nom) | Musikinstrumente nach 'spielen' ohne Artikel (–)" },
+            { deGaps: "Trotz des Förderbedarfs spielt ___ Schüler ___ Gitarre.", answers: ["der", "–"], en: "Despite the special educational needs the pupil plays the guitar.", hint: "Schüler (m, Nom) | Musikinstrument ohne Artikel (–)" },
+            { deGaps: "Um ___ Wissenslücken zu stopfen, brauchen ___ Schulen ___ Sonderpädagogen.", answers: ["–", "die", "–"], en: "In order to fill (some) gaps in knowledge the schools need some special needs teachers.", hint: "'some' im Plural = kein Artikel (–) bei Wissenslücken & Sonderpädagogen | Schulen (Pl, Nom)" },
+            { deGaps: "Gibt es an ___ Regelschule ___ individuellen Förderunterricht?", answers: ["der", "–"], en: "Is there any individual remedial teaching at the mainstream school?", hint: "Regelschule (f, Dat) | 'any' + unzählbares Nomen = kein Artikel (–)" },
+            { deGaps: "Ohne ___ Barrierefreiheit hat ___ Kind ___ zweite Chance.", answers: ["–", "das", "keine"], en: "Without accessibility the child has no second chance.", hint: "Nach 'ohne' oft kein Artikel (–) | Kind (n, Nom) | Verneinung: Chance (f, Akk)" },
+            { deGaps: "Wir haben ___ Texte in ___ Blindenschrift, aber ___ Bücher für ___ Gebärdensprache.", answers: ["–", "–", "keine", "–"], en: "We have some texts in braille, but no books for sign language.", hint: "'some' Plural (–) | in Blindenschrift (–) | Verneinung Plural (keine) | für Gebärdensprache allgemein (–)" },
+            { deGaps: "Es gibt ___ Förderunterricht in ___ Hamburg, aber ___ einheitlichen Regeln.", answers: ["–", "–", "keine"], en: "There is some remedial teaching in Hamburg, but no uniform rules.", hint: "'some' unzählbar (–) | Stadt (–) | Verneinung Plural (keine)" },
+            { deGaps: "Mit ___ Unterstützung kann ___ Schüler ___ Stoff nachholen.", answers: ["der", "der", "den"], en: "With the support the pupil can catch up on the material.", hint: "Unterstützung (f, Dat) | Schüler (m, Nom) | Stoff (m, Akk)" },
+            { deGaps: "___ Schüler dreht ___ Ehrenrunde, weil ___ Versetzung gefährdet war.", answers: ["Ein", "eine", "die"], en: "A pupil repeats a year because moving up was at risk.", hint: "Schüler (m, Nom) | Ehrenrunde (f, Akk) | Versetzung (f, Nom)" },
 
             // Category 5: Short Notices / Headings (NO article)
-            { de: "Sonderpädagoge für Regelschule dringend gesucht.", en: "Special needs teacher urgently wanted for mainstream school.", verb: "gesucht (Partizip)" },
-            { de: "Förderunterricht statt Ehrenrunde ab Montag.", en: "Remedial teaching instead of repeating a year starting from Monday.", verb: "(kein Verb / Aushang)" }
+            { deGaps: "___ Sonderpädagoge für ___ Regelschule dringend gesucht.", answers: ["–", "–"], en: "NOTICE: Special needs teacher urgently wanted for mainstream school.", hint: "In Überschriften, Schildern und Aushängen lässt man den Artikel weg (–)" },
+            { deGaps: "___ Förderunterricht statt ___ Ehrenrunde ab Montag.", answers: ["–", "–"], en: "NOTICE: Remedial teaching instead of repeating a year starting from Monday.", hint: "Aushang / Schild: keine Artikel nötig (–)" }
         ];
 
+        const basePool = ["–", "der", "die", "das", "den", "dem", "ein", "eine", "einen", "einer", "kein", "keine", "keinen"];
         const playerColours = ['blue', 'purple', 'amber'];
         const playerNames = ['Blaues Team', 'Lila Team', 'Gold Team'];
 
@@ -214,52 +236,14 @@
         let remainingPairs = [];
         let currentPlayerIndex = 0;
         let currentPair = null;
-        let usedVerbHint = false;
+        let userGaps = [];
+        let activeGapIndex = 0;
+        let usedHint = false;
         let digsRemaining = 0;
         let gridData = [];
         const gridSize = 48; 
-        let timeLeft = 480; // 8 minutes for longer B3 sentences
+        let timeLeft = 480;
         let timerInterval = null;
-
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition = null;
-        let isRecognitionActive = false;
-
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.lang = 'de-DE';
-            recognition.interimResults = false;
-            
-            recognition.onstart = () => {
-                isRecognitionActive = true;
-                const micBtn = document.getElementById('mic-btn');
-                micBtn.classList.add('mic-listening');
-                micBtn.innerHTML = "🔴";
-                document.getElementById('speech-status').innerText = "🔴 Höre zu... / Listening...";
-            };
-
-            recognition.onresult = (event) => {
-                const speechResult = event.results[0][0].transcript;
-                const input = document.getElementById('answer-input');
-                input.value = speechResult;
-                document.getElementById('speech-status').innerText = "✅ Erkannt! / Recognized!";
-            };
-            
-            recognition.onerror = () => {
-                isRecognitionActive = false;
-                const micBtn = document.getElementById('mic-btn');
-                micBtn.classList.remove('mic-listening');
-                micBtn.innerHTML = "🎤";
-                document.getElementById('speech-status').innerText = "⚠️ Mikrofonfehler. Bitte tippen.";
-            };
-            
-            recognition.onend = () => {
-                isRecognitionActive = false;
-                const micBtn = document.getElementById('mic-btn');
-                micBtn.classList.remove('mic-listening');
-                micBtn.innerHTML = "🎤";
-            };
-        }
 
         function startGame(count) {
             players = [];
@@ -364,103 +348,140 @@
             `).join('');
         }
 
-        function showVerbHint() {
-            usedVerbHint = true;
+        function showGrammarHint() {
+            usedHint = true;
             document.getElementById('hint-btn').classList.add('hidden');
-            const hintDisplay = document.getElementById('verb-hint-display');
-            document.getElementById('verb-text').innerText = currentPair.verb;
+            const hintDisplay = document.getElementById('grammar-hint-display');
+            document.getElementById('hint-text').innerText = currentPair.hint;
             hintDisplay.classList.remove('hidden');
+        }
+
+        function renderSentenceWithGaps() {
+            const parts = currentPair.deGaps.split("___");
+            const container = document.getElementById('german-gap-sentence');
+            let html = "";
+            for (let i = 0; i < parts.length; i++) {
+                html += `<span>${parts[i]}</span>`;
+                if (i < currentPair.answers.length) {
+                    const val = userGaps[i] ? userGaps[i] : `(${i + 1})`;
+                    const isActive = (i === activeGapIndex);
+                    const filledClass = userGaps[i] ? "bg-green-50 text-green-800 border-green-600" : "text-slate-400";
+                    html += `<span onclick="selectGap(${i})" class="gap-slot ${filledClass} ${isActive ? 'active-gap' : ''}">${val}</span>`;
+                }
+            }
+            container.innerHTML = html;
+            
+            const allFilled = userGaps.every(g => g !== null);
+            document.getElementById('submit-btn').disabled = !allFilled;
+        }
+
+        function selectGap(index) {
+            if (document.getElementById('submit-btn').dataset.locked === "true") return;
+            userGaps[index] = null;
+            activeGapIndex = index;
+            renderSentenceWithGaps();
+        }
+
+        function chooseOption(word) {
+            if (document.getElementById('submit-btn').dataset.locked === "true") return;
+            if (activeGapIndex < userGaps.length) {
+                // Capitalise automatically if the gap is at the very beginning of the sentence
+                const startsSentence = (activeGapIndex === 0 && currentPair.deGaps.startsWith("___"));
+                let formattedWord = word;
+                if (startsSentence && word !== "–") {
+                    formattedWord = word.charAt(0).toUpperCase() + word.slice(1);
+                }
+                userGaps[activeGapIndex] = formattedWord;
+                
+                // Move to next empty gap
+                const nextEmpty = userGaps.findIndex(g => g === null);
+                if (nextEmpty !== -1) {
+                    activeGapIndex = nextEmpty;
+                }
+                renderSentenceWithGaps();
+            }
+        }
+
+        function clearGaps() {
+            if (document.getElementById('submit-btn').dataset.locked === "true") return;
+            userGaps = new Array(currentPair.answers.length).fill(null);
+            activeGapIndex = 0;
+            renderSentenceWithGaps();
+        }
+
+        function renderOptionButtons() {
+            const btnContainer = document.getElementById('article-buttons');
+            btnContainer.innerHTML = basePool.map(opt => {
+                const label = opt === "–" ? "– (kein Artikel)" : opt;
+                const extraStyle = opt === "–" ? "bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100" : "bg-slate-100 border-slate-300 text-slate-800 hover:bg-green-100 hover:border-green-400";
+                return `<button onclick="chooseOption('${opt}')" class="px-2.5 py-1 rounded-lg border font-bold text-xs md:text-sm transition-all active:scale-95 shadow-sm ${extraStyle}">${label}</button>`;
+            }).join('');
         }
 
         function startNewRound() {
             digsRemaining = 0;
-            usedVerbHint = false;
+            usedHint = false;
             document.getElementById('continue-btn').classList.add('hidden');
             
             document.getElementById('hint-btn').classList.remove('hidden');
-            document.getElementById('verb-hint-display').classList.add('hidden');
+            document.getElementById('hint-btn').disabled = false;
+            document.getElementById('grammar-hint-display').classList.add('hidden');
             
-            const input = document.getElementById('answer-input');
             const submitBtn = document.getElementById('submit-btn');
-            const micBtn = document.getElementById('mic-btn');
+            submitBtn.disabled = true;
+            submitBtn.dataset.locked = "false";
 
-            input.value = '';
-            input.disabled = false;
-            input.classList.remove('bg-slate-50');
-            submitBtn.disabled = false;
-            micBtn.disabled = false;
-            micBtn.innerHTML = "🎤";
-
-            document.getElementById('feedback-area').innerHTML = '<p class="text-slate-400 italic text-xs">Tippe oder sprich den Satz / Type or speak sentence</p>';
-            document.getElementById('speech-status').innerText = "Bereit zum Tippen oder Sprechen...";
-            document.getElementById('grid-status-text').innerHTML = '<span>📍</span> Bereit zum Graben...';
+            document.getElementById('feedback-area').innerHTML = '<p class="text-slate-400 italic text-xs">Klicke auf die Artikel-Bausteine, um die Lücken zu füllen / Click buttons to fill gaps</p>';
+            document.getElementById('grid-status-text').innerHTML = '<span>📍</span> Löse zuerst die Aufgabe...';
             document.getElementById('dig-count').innerText = "";
             
             if (remainingPairs.length === 0) {
                 remainingPairs = [...sentencePairs].sort(() => Math.random() - 0.5);
             }
             currentPair = remainingPairs.pop();
+            userGaps = new Array(currentPair.answers.length).fill(null);
+            activeGapIndex = 0;
+
             document.getElementById('target-prompt').innerText = currentPair.en;
+            renderSentenceWithGaps();
+            renderOptionButtons();
             updatePlayerBoard();
         }
 
-        function startSpeech() {
-            if (!recognition) {
-                alert("Spracherkennung wird von diesem Browser leider nicht unterstützt. Bitte tippe den Satz ein.");
-                return;
+        function buildFullSolutionString() {
+            const parts = currentPair.deGaps.split("___");
+            let res = "";
+            for (let i = 0; i < parts.length; i++) {
+                res += parts[i];
+                if (i < currentPair.answers.length) {
+                    res += `[${currentPair.answers[i]}]`;
+                }
             }
-            if (isRecognitionActive) return;
-            try {
-                recognition.start();
-            } catch(e) {
-                console.log(e);
-            }
-        }
-
-        function replaceNumbersWithWords(str) {
-            const numberMap = {
-                '0': 'null', '1': 'ein', '2': 'zwei', '3': 'drei', '4': 'vier',
-                '5': 'fünf', '6': 'sechs', '7': 'sieben', '8': 'acht', '9': 'neun',
-                '10': 'zehn', '11': 'elf', '12': 'zwölf', '13': 'dreizehn',
-                '14': 'vierzehn', '15': 'fünfzehn', '16': 'sechzehn',
-                '17': 'siebzehn', '18': 'achtzehn', '19': 'neunzehn', '20': 'zwanzig'
-            };
-            return str.replace(/\b\d+\b/g, match => numberMap[match] || match);
-        }
-
-        function normalise(str) {
-            let processed = str.toLowerCase();
-            processed = replaceNumbersWithWords(processed);
-            processed = processed.replace(/\bsitzenbleiben\b/g, "sitzen bleiben");
-            return processed
-                .replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, "")
-                .replace(/\s+/g, " ")
-                .trim();
+            return res;
         }
 
         function checkAnswer() {
-            const inputVal = document.getElementById('answer-input').value;
-            const normInput = normalise(inputVal);
-            const normCorrect = normalise(currentPair.de);
-            
-            const isCorrect = (normInput === normCorrect);
-            const feedback = document.getElementById('feedback-area');
-            
-            document.getElementById('answer-input').disabled = true;
-            document.getElementById('submit-btn').disabled = true;
-            document.getElementById('mic-btn').disabled = true;
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.dataset.locked = "true";
             document.getElementById('hint-btn').disabled = true;
+
+            const isCorrect = currentPair.answers.every((ans, idx) => {
+                return (userGaps[idx] || "").toLowerCase() === ans.toLowerCase();
+            });
+
+            const feedback = document.getElementById('feedback-area');
 
             if (isCorrect) {
                 players[currentPlayerIndex].correctAnswers++;
                 updatePlayerBoard();
                 
-                if (usedVerbHint) {
+                if (usedHint) {
                     chooseHelp(true);
                 } else {
                     feedback.innerHTML = `
                         <div class="text-green-600 font-black text-sm mb-1">✅ RICHTIG / CORRECT!</div>
-                        <p class="text-slate-700 text-xs font-bold mb-1">Andere Hilfe benutzt? / Used other help?</p>
+                        <p class="text-slate-700 text-xs font-bold mb-1">Andere Hilfe (z.B. Vokabelliste) benutzt? / Used other help?</p>
                         <div class="flex gap-2 w-full">
                             <button onclick="chooseHelp(false)" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-2 rounded text-xs shadow">
                                 Nein, ohne Hilfe / No (2 Felder)
@@ -475,21 +496,20 @@
                 feedback.innerHTML = `
                     <div class="text-red-600 font-bold text-xs mb-1">❌ FALSCH / INCORRECT</div>
                     <div class="w-full grid grid-cols-1 gap-1 text-left bg-slate-50 p-2 rounded border border-slate-200">
-                        <div class="text-[11px]"><strong class="text-red-500">Deine Eingabe / Your input:</strong> <span class="font-bold text-black">"${inputVal || "(leer)"}"</span></div>
-                        <div class="text-[11px]"><strong class="text-blue-600">Lösung / Solution:</strong> <span class="font-bold text-black">${currentPair.de}</span></div>
+                        <div class="text-[11px]"><strong class="text-red-500">Deine Wahl / Your choice:</strong> <span class="font-bold text-black">${userGaps.join(" , ")}</span></div>
+                        <div class="text-[11px]"><strong class="text-blue-600">Lösung / Solution:</strong> <span class="font-bold text-black">${buildFullSolutionString()}</span></div>
                     </div>
                 `;
                 document.getElementById('continue-btn').classList.remove('hidden');
                 document.getElementById('grid-status-text').innerHTML = '<span>👎</span> Leider falsch / Incorrect';
             }
-            document.getElementById('hint-btn').disabled = false;
         }
 
-        function chooseHelp(usedHelp) {
-            digsRemaining = usedHelp ? 1 : 2;
+        function chooseHelp(usedHelpFlag) {
+            digsRemaining = usedHelpFlag ? 1 : 2;
             const feedback = document.getElementById('feedback-area');
             feedback.innerHTML = `
-                <div class="text-green-600 font-bold text-xs mb-0.5">🎉 Super! ${usedVerbHint ? '(Verb-Hilfe genutzt)' : ''}</div>
+                <div class="text-green-600 font-bold text-xs mb-0.5">🎉 Super! ${usedHint ? '(Regel-Hilfe genutzt)' : ''}</div>
                 <p class="text-slate-700 text-xs font-bold">Grabe <span class="text-green-600 underline">${digsRemaining} ${digsRemaining === 1 ? 'Feld' : 'Felder'}</span> auf / Dig ${digsRemaining} tile(s)!</p>
             `;
             document.getElementById('grid-status-text').innerHTML = `<span class="text-green-500 font-bold">⛏️ ${digsRemaining} Zug${digsRemaining > 1 ? 'e' : ''} übrig / left</span>`;
