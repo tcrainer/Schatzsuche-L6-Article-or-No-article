@@ -78,7 +78,7 @@
         <header class="bg-green-600 px-4 py-2.5 text-white flex flex-row justify-between items-center gap-2">
             <div>
                 <h1 class="text-xl md:text-2xl title-font leading-tight">💎 Schatzsuche: Artikel oder kein Artikel?</h1>
-                <p class="text-green-100 text-xs italic">Sitzenbleiben & Inklusion — Wähle den richtigen Artikel oder „–“ (kein Artikel)!</p>
+                <p class="text-green-100 text-xs italic">1 richtige Lücke = 1 Feld aufdecken! / 1 correct gap = 1 tile!</p>
             </div>
             <div id="timer-display" class="bg-green-800 px-3 py-1 rounded-xl text-lg md:text-xl font-bold border border-green-400 text-center shadow-inner">
                 08:00
@@ -103,7 +103,7 @@
                 <!-- Player Board -->
                 <div id="player-board" class="grid grid-cols-2 lg:grid-cols-1 gap-2"></div>
 
-                <!-- Task Box: English + German Gap-fill + Hint -->
+                <!-- Task Box: English + German Gap-fill -->
                 <div id="turn-info" class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-2">
                     <div class="text-center">
                         <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Englisch / English Prompt</p>
@@ -113,16 +113,6 @@
                     <div class="pt-2 border-t border-slate-100 text-center">
                         <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-1">Lückentext / Fill in the gap(s)</p>
                         <div id="german-gap-sentence" class="text-sm md:text-base font-bold text-black leading-relaxed"></div>
-                    </div>
-
-                    <!-- Grammar / Gender Hint Button -->
-                    <div class="pt-1 border-t border-slate-100 flex items-center justify-center">
-                        <button id="hint-btn" onclick="showGrammarHint()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-3 py-1 rounded-lg border border-amber-300 transition-colors">
-                            💡 Hilfe: Regel & Genus zeigen (nur 1 Feld) / Show Hint (1 tile)
-                        </button>
-                        <div id="grammar-hint-display" class="hidden text-[11px] font-bold text-amber-900 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 text-center">
-                            💡 <span id="hint-text"></span>
-                        </div>
                     </div>
                 </div>
 
@@ -176,56 +166,56 @@
     <script>
         /**
          * 38 Gap-Fill Sentences testing Definite Article, Indefinite Article (ein/eine/kein/keine), and Zero Article (–).
-         * Each ___ in `deGaps` corresponds to an entry in `answers`.
+         * 1 correct gap = 1 field to uncover on the treasure grid.
          */
         const sentencePairs = [
             // Category 1: Definite article where English has NO article
-            { deGaps: "___ Leistungsdruck schadet ___ Motivation.", answers: ["Der", "der"], en: "Pressure to achieve harms motivation.", hint: "Abstrakte Nomen brauchen den Artikel: Leistungsdruck (m, Nom) | Motivation (f, Dat nach 'schaden')" },
-            { deGaps: "___ individuelle Förderung kann ___ Selbstbewusstsein stärken.", answers: ["Die", "das"], en: "Individual support can boost self-confidence.", hint: "Abstrakte Nomen: Förderung (f, Nom) | Selbstbewusstsein (n, Akk)" },
-            { deGaps: "___ Inklusion und ___ Barrierefreiheit gehören zusammen.", answers: ["Die", "die"], en: "Inclusion and accessibility belong together.", hint: "Abstrakte Nomen: Inklusion (f, Nom) | Barrierefreiheit (f, Nom)" },
-            { deGaps: "Jedes Kind hat ___ Recht auf ___ Bildung.", answers: ["das", "–"], en: "Every child has the right to education.", hint: "Recht (n, Akk - 'das Recht auf') | Bildung allgemein nach 'Recht auf' ohne Artikel (–)" },
-            { deGaps: "In ___ Schweiz lernen viele Kinder mit ___ Förderbedarf an ___ Regelschule.", answers: ["der", "–", "der"], en: "In Switzerland many children with special educational needs learn at mainstream school.", hint: "Schweiz (f, Dat) | nach 'mit' + unzählbar kein Artikel (–) | Regelschule (f, Dat)" },
-            { deGaps: "In ___ Türkei gibt es auch ___ Debatte über ___ Inklusion.", answers: ["der", "eine", "die"], en: "In Turkey there is also a debate about inclusion.", hint: "Türkei (f, Dat) | Debatte (f, Akk - unbestimmt) | Inklusion (f, Akk - abstraktes Nomen)" },
-            { deGaps: "Im heutigen ___ Bayern gilt ___ strenge Praxis bei ___ Versetzung.", answers: ["–", "eine", "der"], en: "In modern-day Bavaria a strict practice applies to moving up a year.", hint: "Artikel steckt schon in 'Im' (–) | Praxis (f, Nom) | Versetzung (f, Dat)" },
-            { deGaps: "___ meisten Schüler wollen nicht sitzen bleiben.", answers: ["Die"], en: "Most pupils do not want to repeat a year.", hint: "Vor 'meisten' steht im Deutschen immer der bestimmte Artikel Plural" },
-            { deGaps: "___ meisten Bundesländer haben ___ einheitlichen Regeln für ___ Versetzung.", answers: ["Die", "keine", "die"], en: "Most federal states have no uniform rules for moving up a year.", hint: "meisten (Pl) | Verneinung Plural (keine) | Versetzung (f, Akk)" },
-            { deGaps: "Im Sommer müssen manche Schüler ___ Wissenslücken stopfen.", answers: ["die"], en: "In summer some pupils have to fill the gaps in knowledge.", hint: "Wissenslücken (Pl, Akk - 'die Wissenslücken stopfen')" },
-            { deGaps: "___ Förderunterricht findet dreimal ___ Woche statt.", answers: ["Der", "die"], en: "Remedial teaching takes place three times a week.", hint: "Förderunterricht (m, Nom) | Frequenz: 'dreimal die Woche'" },
-            { deGaps: "Der Kurs für ___ Gebärdensprache kostet zwanzig Euro ___ Stunde.", answers: ["die", "die"], en: "The course for sign language costs twenty euros an hour.", hint: "Gebärdensprache (f, Akk) | Preis/Maß: 'zwanzig Euro die Stunde'" },
-            { deGaps: "___ Förderschule liegt in ___ Gartenstraße.", answers: ["Die", "der"], en: "The special school is on Garden Street.", hint: "Förderschule (f, Nom) | Straßennamen immer mit Artikel: Gartenstraße (f, Dat)" },
+            { deGaps: "___ Leistungsdruck schadet ___ Motivation.", answers: ["Der", "der"], en: "Pressure to achieve harms motivation." },
+            { deGaps: "___ individuelle Förderung kann ___ Selbstbewusstsein stärken.", answers: ["Die", "das"], en: "Individual support can boost self-confidence." },
+            { deGaps: "___ Inklusion und ___ Barrierefreiheit gehören zusammen.", answers: ["Die", "die"], en: "Inclusion and accessibility belong together." },
+            { deGaps: "Jedes Kind hat ___ Recht auf ___ Bildung.", answers: ["das", "–"], en: "Every child has the right to education." },
+            { deGaps: "In ___ Schweiz lernen viele Kinder mit ___ Förderbedarf an ___ Regelschule.", answers: ["der", "–", "der"], en: "In Switzerland many children with special educational needs learn at mainstream school." },
+            { deGaps: "In ___ Türkei gibt es auch ___ Debatte über ___ Inklusion.", answers: ["der", "eine", "die"], en: "In Turkey there is also a debate about inclusion." },
+            { deGaps: "Im heutigen ___ Bayern gilt ___ strenge Praxis bei ___ Versetzung.", answers: ["–", "eine", "der"], en: "In modern-day Bavaria a strict practice applies to moving up a year." },
+            { deGaps: "___ meisten Schüler wollen nicht sitzen bleiben.", answers: ["Die"], en: "Most pupils do not want to repeat a year." },
+            { deGaps: "___ meisten Bundesländer haben ___ einheitlichen Regeln für ___ Versetzung.", answers: ["Die", "keine", "die"], en: "Most federal states have no uniform rules for moving up a year." },
+            { deGaps: "Im Sommer müssen manche Schüler ___ Wissenslücken stopfen.", answers: ["die"], en: "In summer some pupils have to fill the gaps in knowledge." },
+            { deGaps: "___ Förderunterricht findet dreimal ___ Woche statt.", answers: ["Der", "die"], en: "Remedial teaching takes place three times a week." },
+            { deGaps: "Der Kurs für ___ Gebärdensprache kostet zwanzig Euro ___ Stunde.", answers: ["die", "die"], en: "The course for sign language costs twenty euros an hour." },
+            { deGaps: "___ Förderschule liegt in ___ Gartenstraße.", answers: ["Die", "der"], en: "The special school is on Garden Street." },
 
             // Category 2: Definite article for Body Parts & Clothing (where English uses my / his / her)
-            { deGaps: "Beim Lernen ___ Gebärdensprache bewegt das Mädchen ___ Hände.", answers: ["der", "die"], en: "While learning sign language the girl moves her hands.", hint: "Gebärdensprache (f, Gen) | Körperteile mit bestimmtem Artikel: Hände (Pl, Akk)" },
-            { deGaps: "Beim Lesen ___ Blindenschrift schließt der Schüler ___ Augen.", answers: ["der", "die"], en: "While reading braille the pupil closes his eyes.", hint: "Blindenschrift (f, Gen) | Körperteile mit bestimmtem Artikel: Augen (Pl, Akk)" },
-            { deGaps: "Wegen des Leistungsdrucks tut mir ___ Bauch weh.", answers: ["der"], en: "Because of the pressure to achieve my stomach hurts.", hint: "Körperteil mit bestimmtem Artikel: Bauch (m, Nom)" },
-            { deGaps: "Vor dem Förderunterricht zieht die Schülerin ___ Mantel aus.", answers: ["den"], en: "Before remedial teaching the female pupil takes off her coat.", hint: "Kleidung mit bestimmtem Artikel: Mantel (m, Akk)" },
-            { deGaps: "Nach ___ Ehrenrunde schüttelt der Junge ___ Kopf.", answers: ["der", "den"], en: "After repeating a year the boy shakes his head.", hint: "Ehrenrunde (f, Dat) | Körperteil: Kopf (m, Akk)" },
-            { deGaps: "___ Sonderpädagoge schüttelt mir ___ Hand.", answers: ["Der", "die"], en: "The special needs teacher shakes my hand.", hint: "Sonderpädagoge (m, Nom) | Körperteil: Hand (f, Akk)" },
+            { deGaps: "Beim Lernen ___ Gebärdensprache bewegt das Mädchen ___ Hände.", answers: ["der", "die"], en: "While learning sign language the girl moves her hands." },
+            { deGaps: "Beim Lesen ___ Blindenschrift schließt der Schüler ___ Augen.", answers: ["der", "die"], en: "While reading braille the pupil closes his eyes." },
+            { deGaps: "Wegen des Leistungsdrucks tut mir ___ Bauch weh.", answers: ["der"], en: "Because of the pressure to achieve my stomach hurts." },
+            { deGaps: "Vor dem Förderunterricht zieht die Schülerin ___ Mantel aus.", answers: ["den"], en: "Before remedial teaching the female pupil takes off her coat." },
+            { deGaps: "Nach ___ Ehrenrunde schüttelt der Junge ___ Kopf.", answers: ["der", "den"], en: "After repeating a year the boy shakes his head." },
+            { deGaps: "___ Sonderpädagoge schüttelt mir ___ Hand.", answers: ["Der", "die"], en: "The special needs teacher shakes my hand." },
 
             // Category 3: Indefinite article (ein/eine) vs. NO article with professions, nationalities, and als
-            { deGaps: "Mein Bruder wird ___ Sonderpädagoge an ___ Förderschule.", answers: ["–", "einer"], en: "My brother is becoming a special needs teacher at a special school.", hint: "Beruf nach 'werden' ohne Artikel (–) | Förderschule (f, Dat - unbestimmt)" },
-            { deGaps: "Sie ist ___ engagierte Sonderpädagogin und unterstützt ___ Inklusion.", answers: ["eine", "die"], en: "She is a dedicated special needs teacher and supports inclusion.", hint: "Beruf MIT Adjektiv braucht 'eine' (f, Nom) | Inklusion (f, Akk - abstrakt)" },
-            { deGaps: "Er arbeitet als ___ Sonderpädagoge in ___ Hamburg.", answers: ["–", "–"], en: "He works as a special needs teacher in Hamburg.", hint: "Nach 'als' + Beruf kein Artikel (–) | Stadt ohne Adjektiv kein Artikel (–)" },
-            { deGaps: "___ neue Sonderpädagoge ist ___ Österreicher.", answers: ["Der", "–"], en: "The new special needs teacher is an Austrian.", hint: "Bestimmte Person (m, Nom) | Nationalität nach 'sein' ohne Artikel (–)" },
-            { deGaps: "___ Ehrenrunde ist manchmal ___ zweite Chance für ___ Kind.", answers: ["Die", "eine", "ein"], en: "Repeating a year is sometimes a second chance for a child.", hint: "Ehrenrunde (f, Nom) | Chance (f, Nom - unbestimmt) | Kind (n, Akk - unbestimmt)" },
-            { deGaps: "Ist ___ Förderunterricht ___ bessere Alternative als ___ Sitzenbleiben?", answers: ["der", "eine", "das"], en: "Is remedial teaching a better alternative than repeating a year?", hint: "Förderunterricht (m, Nom) | Alternative (f, Nom) | Sitzenbleiben (n, Nom)" },
-            { deGaps: "In ___ Bayern gibt es ___ strenge Praxis, wenn ___ Schüler nicht versetzt werden.", answers: ["–", "eine", "–"], en: "In Bavaria there is a strict practice when pupils are not moved up.", hint: "Bundesland ohne Artikel (–) | Praxis (f, Akk) | unbestimmter Plural ohne Artikel (–)" },
-            { deGaps: "Je nach ___ Bundesland ist ___ Ehrenrunde möglich.", answers: ["–", "eine"], en: "Depending on the federal state repeating a year (an extra lap) is possible.", hint: "Fester Ausdruck 'je nach Bundesland' ohne Artikel (–) | Ehrenrunde (f, Nom)" },
+            { deGaps: "Mein Bruder wird ___ Sonderpädagoge an ___ Förderschule.", answers: ["–", "einer"], en: "My brother is becoming a special needs teacher at a special school." },
+            { deGaps: "Sie ist ___ engagierte Sonderpädagogin und unterstützt ___ Inklusion.", answers: ["eine", "die"], en: "She is a dedicated special needs teacher and supports inclusion." },
+            { deGaps: "Er arbeitet als ___ Sonderpädagoge in ___ Hamburg.", answers: ["–", "–"], en: "He works as a special needs teacher in Hamburg." },
+            { deGaps: "___ neue Sonderpädagoge ist ___ Österreicher.", answers: ["Der", "–"], en: "The new special needs teacher is an Austrian." },
+            { deGaps: "___ Ehrenrunde ist manchmal ___ zweite Chance für ___ Kind.", answers: ["Die", "eine", "ein"], en: "Repeating a year is sometimes a second chance for a child." },
+            { deGaps: "Ist ___ Förderunterricht ___ bessere Alternative als ___ Sitzenbleiben?", answers: ["der", "eine", "das"], en: "Is remedial teaching a better alternative than repeating a year?" },
+            { deGaps: "In ___ Bayern gibt es ___ strenge Praxis, wenn ___ Schüler nicht versetzt werden.", answers: ["–", "eine", "–"], en: "In Bavaria there is a strict practice when pupils are not moved up." },
+            { deGaps: "Je nach ___ Bundesland ist ___ Ehrenrunde möglich.", answers: ["–", "eine"], en: "Depending on the federal state repeating a year (an extra lap) is possible." },
 
             // Category 4: NO article for musical instruments, some/any, and negation with kein/keine
-            { deGaps: "In ___ Regelschule lernen ___ Kinder gemeinsam und spielen ___ Klavier.", answers: ["der", "die", "–"], en: "In the mainstream school the children learn together and play the piano.", hint: "Regelschule (f, Dat) | Kinder (Pl, Nom) | Musikinstrumente nach 'spielen' ohne Artikel (–)" },
-            { deGaps: "Trotz des Förderbedarfs spielt ___ Schüler ___ Gitarre.", answers: ["der", "–"], en: "Despite the special educational needs the pupil plays the guitar.", hint: "Schüler (m, Nom) | Musikinstrument ohne Artikel (–)" },
-            { deGaps: "Um ___ Wissenslücken zu stopfen, brauchen ___ Schulen ___ Sonderpädagogen.", answers: ["–", "die", "–"], en: "In order to fill (some) gaps in knowledge the schools need some special needs teachers.", hint: "'some' im Plural = kein Artikel (–) bei Wissenslücken & Sonderpädagogen | Schulen (Pl, Nom)" },
-            { deGaps: "Gibt es an ___ Regelschule ___ individuellen Förderunterricht?", answers: ["der", "–"], en: "Is there any individual remedial teaching at the mainstream school?", hint: "Regelschule (f, Dat) | 'any' + unzählbares Nomen = kein Artikel (–)" },
-            { deGaps: "Ohne ___ Barrierefreiheit hat ___ Kind ___ zweite Chance.", answers: ["–", "das", "keine"], en: "Without accessibility the child has no second chance.", hint: "Nach 'ohne' oft kein Artikel (–) | Kind (n, Nom) | Verneinung: Chance (f, Akk)" },
-            { deGaps: "Wir haben ___ Texte in ___ Blindenschrift, aber ___ Bücher für ___ Gebärdensprache.", answers: ["–", "–", "keine", "–"], en: "We have some texts in braille, but no books for sign language.", hint: "'some' Plural (–) | in Blindenschrift (–) | Verneinung Plural (keine) | für Gebärdensprache allgemein (–)" },
-            { deGaps: "Es gibt ___ Förderunterricht in ___ Hamburg, aber ___ einheitlichen Regeln.", answers: ["–", "–", "keine"], en: "There is some remedial teaching in Hamburg, but no uniform rules.", hint: "'some' unzählbar (–) | Stadt (–) | Verneinung Plural (keine)" },
-            { deGaps: "Mit ___ Unterstützung kann ___ Schüler ___ Stoff nachholen.", answers: ["der", "der", "den"], en: "With the support the pupil can catch up on the material.", hint: "Unterstützung (f, Dat) | Schüler (m, Nom) | Stoff (m, Akk)" },
-            { deGaps: "___ Schüler dreht ___ Ehrenrunde, weil ___ Versetzung gefährdet war.", answers: ["Ein", "eine", "die"], en: "A pupil repeats a year because moving up was at risk.", hint: "Schüler (m, Nom) | Ehrenrunde (f, Akk) | Versetzung (f, Nom)" },
+            { deGaps: "In ___ Regelschule lernen ___ Kinder gemeinsam und spielen ___ Klavier.", answers: ["der", "die", "–"], en: "In the mainstream school the children learn together and play the piano." },
+            { deGaps: "Trotz des Förderbedarfs spielt ___ Schüler ___ Gitarre.", answers: ["der", "–"], en: "Despite the special educational needs the pupil plays the guitar." },
+            { deGaps: "Um ___ Wissenslücken zu stopfen, brauchen ___ Schulen ___ Sonderpädagogen.", answers: ["–", "die", "–"], en: "In order to fill (some) gaps in knowledge the schools need some special needs teachers." },
+            { deGaps: "Gibt es an ___ Regelschule ___ individuellen Förderunterricht?", answers: ["der", "–"], en: "Is there any individual remedial teaching at the mainstream school?" },
+            { deGaps: "Ohne ___ Barrierefreiheit hat ___ Kind ___ zweite Chance.", answers: ["–", "das", "keine"], en: "Without accessibility the child has no second chance." },
+            { deGaps: "Wir haben ___ Texte in ___ Blindenschrift, aber ___ Bücher für ___ Gebärdensprache.", answers: ["–", "–", "keine", "–"], en: "We have some texts in braille, but no books for sign language." },
+            { deGaps: "Es gibt ___ Förderunterricht in ___ Hamburg, aber ___ einheitlichen Regeln.", answers: ["–", "–", "keine"], en: "There is some remedial teaching in Hamburg, but no uniform rules." },
+            { deGaps: "Mit ___ Unterstützung kann ___ Schüler ___ Stoff nachholen.", answers: ["der", "der", "den"], en: "With the support the pupil can catch up on the material." },
+            { deGaps: "___ Schüler dreht ___ Ehrenrunde, weil ___ Versetzung gefährdet war.", answers: ["Ein", "eine", "die"], en: "A pupil repeats a year because moving up was at risk." },
 
             // Category 5: Short Notices / Headings (NO article)
-            { deGaps: "___ Sonderpädagoge für ___ Regelschule dringend gesucht.", answers: ["–", "–"], en: "NOTICE: Special needs teacher urgently wanted for mainstream school.", hint: "In Überschriften, Schildern und Aushängen lässt man den Artikel weg (–)" },
-            { deGaps: "___ Förderunterricht statt ___ Ehrenrunde ab Montag.", answers: ["–", "–"], en: "NOTICE: Remedial teaching instead of repeating a year starting from Monday.", hint: "Aushang / Schild: keine Artikel nötig (–)" }
+            { deGaps: "___ Sonderpädagoge für ___ Regelschule dringend gesucht.", answers: ["–", "–"], en: "NOTICE: Special needs teacher urgently wanted for mainstream school." },
+            { deGaps: "___ Förderunterricht statt ___ Ehrenrunde ab Montag.", answers: ["–", "–"], en: "NOTICE: Remedial teaching instead of repeating a year starting from Monday." }
         ];
 
         const basePool = ["–", "der", "die", "das", "den", "dem", "ein", "eine", "einen", "einer", "kein", "keine", "keinen"];
@@ -238,7 +228,6 @@
         let currentPair = null;
         let userGaps = [];
         let activeGapIndex = 0;
-        let usedHint = false;
         let digsRemaining = 0;
         let gridData = [];
         const gridSize = 48; 
@@ -342,18 +331,10 @@
                         <span class="bg-${p.color}-500 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">${p.score} Pkt.</span>
                     </div>
                     <div class="flex items-center text-[11px] text-slate-500 font-semibold mt-0.5">
-                        <span>✅ Richtig / Correct: <strong class="text-${p.color}-600">${p.correctAnswers}</strong></span>
+                        <span>✅ Richtige Lücken / Correct gaps: <strong class="text-${p.color}-600">${p.correctAnswers}</strong></span>
                     </div>
                 </div>
             `).join('');
-        }
-
-        function showGrammarHint() {
-            usedHint = true;
-            document.getElementById('hint-btn').classList.add('hidden');
-            const hintDisplay = document.getElementById('grammar-hint-display');
-            document.getElementById('hint-text').innerText = currentPair.hint;
-            hintDisplay.classList.remove('hidden');
         }
 
         function renderSentenceWithGaps() {
@@ -385,7 +366,6 @@
         function chooseOption(word) {
             if (document.getElementById('submit-btn').dataset.locked === "true") return;
             if (activeGapIndex < userGaps.length) {
-                // Capitalise automatically if the gap is at the very beginning of the sentence
                 const startsSentence = (activeGapIndex === 0 && currentPair.deGaps.startsWith("___"));
                 let formattedWord = word;
                 if (startsSentence && word !== "–") {
@@ -393,7 +373,6 @@
                 }
                 userGaps[activeGapIndex] = formattedWord;
                 
-                // Move to next empty gap
                 const nextEmpty = userGaps.findIndex(g => g === null);
                 if (nextEmpty !== -1) {
                     activeGapIndex = nextEmpty;
@@ -420,12 +399,7 @@
 
         function startNewRound() {
             digsRemaining = 0;
-            usedHint = false;
             document.getElementById('continue-btn').classList.add('hidden');
-            
-            document.getElementById('hint-btn').classList.remove('hidden');
-            document.getElementById('hint-btn').disabled = false;
-            document.getElementById('grammar-hint-display').classList.add('hidden');
             
             const submitBtn = document.getElementById('submit-btn');
             submitBtn.disabled = true;
@@ -464,56 +438,50 @@
             const submitBtn = document.getElementById('submit-btn');
             submitBtn.disabled = true;
             submitBtn.dataset.locked = "true";
-            document.getElementById('hint-btn').disabled = true;
 
-            const isCorrect = currentPair.answers.every((ans, idx) => {
-                return (userGaps[idx] || "").toLowerCase() === ans.toLowerCase();
+            let correctCount = 0;
+            const totalGaps = currentPair.answers.length;
+
+            currentPair.answers.forEach((ans, idx) => {
+                if ((userGaps[idx] || "").toLowerCase() === ans.toLowerCase()) {
+                    correctCount++;
+                }
             });
 
-            const feedback = document.getElementById('feedback-area');
+            players[currentPlayerIndex].correctAnswers += correctCount;
+            updatePlayerBoard();
 
-            if (isCorrect) {
-                players[currentPlayerIndex].correctAnswers++;
-                updatePlayerBoard();
-                
-                if (usedHint) {
-                    chooseHelp(true);
-                } else {
-                    feedback.innerHTML = `
-                        <div class="text-green-600 font-black text-sm mb-1">✅ RICHTIG / CORRECT!</div>
-                        <p class="text-slate-700 text-xs font-bold mb-1">Andere Hilfe (z.B. Vokabelliste) benutzt? / Used other help?</p>
-                        <div class="flex gap-2 w-full">
-                            <button onclick="chooseHelp(false)" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-2 rounded text-xs shadow">
-                                Nein, ohne Hilfe / No (2 Felder)
-                            </button>
-                            <button onclick="chooseHelp(true)" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-1 px-2 rounded text-xs shadow">
-                                Ja, mit Hilfe / Yes (1 Feld)
-                            </button>
-                        </div>
-                    `;
-                }
+            const feedback = document.getElementById('feedback-area');
+            digsRemaining = correctCount;
+
+            if (correctCount === totalGaps) {
+                feedback.innerHTML = `
+                    <div class="text-green-600 font-black text-sm mb-0.5">✅ ALLES RICHTIG! (${correctCount}/${totalGaps})</div>
+                    <p class="text-slate-700 text-xs font-bold">Du darfst <span class="text-green-600 underline">${digsRemaining} ${digsRemaining === 1 ? 'Feld' : 'Felder'}</span> aufdecken! / Dig ${digsRemaining} tile(s)!</p>
+                `;
+                document.getElementById('grid-status-text').innerHTML = `<span class="text-green-500 font-bold">⛏️ ${digsRemaining} Zug${digsRemaining > 1 ? 'e' : ''} übrig / left</span>`;
+                document.getElementById('dig-count').innerText = `👉 Klicke ins Raster / Click grid`;
+            } else if (correctCount > 0) {
+                feedback.innerHTML = `
+                    <div class="text-amber-600 font-black text-xs mb-1">⚠️ TEILWEISE RICHTIG (${correctCount}/${totalGaps}) — Grabe ${digsRemaining} ${digsRemaining === 1 ? 'Feld' : 'Felder'}!</div>
+                    <div class="w-full grid grid-cols-1 gap-0.5 text-left bg-slate-50 p-1.5 rounded border border-slate-200">
+                        <div class="text-[11px]"><strong class="text-red-500">Deine Wahl:</strong> <span class="font-bold text-black">${userGaps.join(" , ")}</span></div>
+                        <div class="text-[11px]"><strong class="text-blue-600">Lösung:</strong> <span class="font-bold text-black">${buildFullSolutionString()}</span></div>
+                    </div>
+                `;
+                document.getElementById('grid-status-text').innerHTML = `<span class="text-green-500 font-bold">⛏️ ${digsRemaining} Zug${digsRemaining > 1 ? 'e' : ''} übrig / left</span>`;
+                document.getElementById('dig-count').innerText = `👉 Klicke ins Raster / Click grid`;
             } else {
                 feedback.innerHTML = `
-                    <div class="text-red-600 font-bold text-xs mb-1">❌ FALSCH / INCORRECT</div>
-                    <div class="w-full grid grid-cols-1 gap-1 text-left bg-slate-50 p-2 rounded border border-slate-200">
-                        <div class="text-[11px]"><strong class="text-red-500">Deine Wahl / Your choice:</strong> <span class="font-bold text-black">${userGaps.join(" , ")}</span></div>
-                        <div class="text-[11px]"><strong class="text-blue-600">Lösung / Solution:</strong> <span class="font-bold text-black">${buildFullSolutionString()}</span></div>
+                    <div class="text-red-600 font-bold text-xs mb-1">❌ LEIDER FALSCH (0/${totalGaps})</div>
+                    <div class="w-full grid grid-cols-1 gap-0.5 text-left bg-slate-50 p-1.5 rounded border border-slate-200">
+                        <div class="text-[11px]"><strong class="text-red-500">Deine Wahl:</strong> <span class="font-bold text-black">${userGaps.join(" , ")}</span></div>
+                        <div class="text-[11px]"><strong class="text-blue-600">Lösung:</strong> <span class="font-bold text-black">${buildFullSolutionString()}</span></div>
                     </div>
                 `;
                 document.getElementById('continue-btn').classList.remove('hidden');
-                document.getElementById('grid-status-text').innerHTML = '<span>👎</span> Leider falsch / Incorrect';
+                document.getElementById('grid-status-text').innerHTML = '<span>👎</span> Leider keine richtige Lücke / 0 correct';
             }
-        }
-
-        function chooseHelp(usedHelpFlag) {
-            digsRemaining = usedHelpFlag ? 1 : 2;
-            const feedback = document.getElementById('feedback-area');
-            feedback.innerHTML = `
-                <div class="text-green-600 font-bold text-xs mb-0.5">🎉 Super! ${usedHint ? '(Regel-Hilfe genutzt)' : ''}</div>
-                <p class="text-slate-700 text-xs font-bold">Grabe <span class="text-green-600 underline">${digsRemaining} ${digsRemaining === 1 ? 'Feld' : 'Felder'}</span> auf / Dig ${digsRemaining} tile(s)!</p>
-            `;
-            document.getElementById('grid-status-text').innerHTML = `<span class="text-green-500 font-bold">⛏️ ${digsRemaining} Zug${digsRemaining > 1 ? 'e' : ''} übrig / left</span>`;
-            document.getElementById('dig-count').innerText = `👉 Klicke ins Raster / Click grid`;
         }
 
         function handleDig(index) {
@@ -544,7 +512,7 @@
             document.getElementById('dig-count').innerText = resultText;
 
             if (digsRemaining > 0) {
-                document.getElementById('grid-status-text').innerHTML = `<span class="text-green-500 font-bold">⛏️ Noch ${digsRemaining} Zug übrig / left</span>`;
+                document.getElementById('grid-status-text').innerHTML = `<span class="text-green-500 font-bold">⛏️ Noch ${digsRemaining} Zug${digsRemaining > 1 ? 'e' : ''} übrig / left</span>`;
             } else {
                 document.getElementById('grid-status-text').innerHTML = '<span>✅</span> Fertig / Done!';
                 document.getElementById('continue-btn').classList.remove('hidden');
@@ -572,7 +540,7 @@
                 <div class="flex items-center justify-between bg-white p-4 rounded-xl border-2 border-${p.color}-500 shadow">
                     <div class="flex flex-col text-left">
                         <span class="text-xl font-bold">${i + 1}. ${p.name}</span>
-                        <span class="text-xs text-slate-500">✅ ${p.correctAnswers} Richtig / Correct</span>
+                        <span class="text-xs text-slate-500">✅ ${p.correctAnswers} richtige Lücken / Correct gaps</span>
                     </div>
                     <span class="text-lg font-bold text-green-600">${p.score} Pkt.</span>
                 </div>
